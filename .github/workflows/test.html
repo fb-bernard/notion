@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Test Cases</title>
+    <script>
+        function calculateNextAppointment(startDate, endDate, recurringStatus, interval, recurringType, weekdays, recurrenceEndDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const recurrenceEnd = new Date(recurrenceEndDate);
+            let nextStart, nextEnd;
+
+            if (recurringStatus === "Not recurring") {
+                return { nextStart: start, nextEnd: end };
+            }
+
+            switch (recurringType) {
+                case "Days":
+                    nextStart = new Date(start.setDate(start.getDate() + interval));
+                    nextEnd = new Date(end.setDate(end.getDate() + interval));
+                    break;
+                case "Weekdays":
+                    const weekdaysArray = weekdays.split(',').map(day => day.trim().toLowerCase());
+                    nextStart = new Date(start);
+                    nextEnd = new Date(end);
+                    do {
+                        nextStart.setDate(nextStart.getDate() + 1);
+                        nextEnd.setDate(nextEnd.getDate() + 1);
+                    } while (!weekdaysArray.includes(nextStart.toLocaleString('en-us', { weekday: 'long' }).toLowerCase()));
+                    break;
+                case "Weeks":
+                    nextStart = new Date(start.setDate(start.getDate() + (interval * 7)));
+                    nextEnd = new Date(end.setDate(end.getDate() + (interval * 7)));
+                    break;
+                case "Months":
+                    nextStart = new Date(start.setMonth(start.getMonth() + interval));
+                    nextEnd = new Date(end.setMonth(end.getMonth() + interval));
+                    break;
+                case "Years":
+                    nextStart = new Date(start.setFullYear(start.getFullYear() + interval));
+                    nextEnd = new Date(end.setFullYear(end.getFullYear() + interval));
+                    break;
+                default:
+                    throw new Error("Invalid recurring type");
+            }
+
+            if (nextStart > recurrenceEnd || nextEnd > recurrenceEnd) {
+                return null; // No more appointments within the recurrence end date
+            }
+
+            return { nextStart, nextEnd };
+        }
+
+        function runTestCases() {
+            const testCases = [
+                {
+                    startDate: "2025-04-10T10:00:00",
+                    endDate: "2025-04-10T11:00:00",
+                    recurringStatus: "Recurring",
+                    interval: 1,
+                    recurringType: "Days",
+                    weekdays: "",
+                    recurrenceEndDate: "2025-04-30T11:00:00"
+                },
+                {
+                    startDate: "2025-04-10T10:00:00",
+                    endDate: "2025-04-10T11:00:00",
+                    recurringStatus: "Recurring",
+                    interval: 1,
+                    recurringType: "Weekdays",
+                    weekdays: "Monday,Wednesday,Friday",
+                    recurrenceEndDate: "2025-04-30T11:00:00"
+                },
+                {
+                    startDate: "2025-04-10T10:00:00",
+                    endDate: "2025-04-10T11:00:00",
+                    recurringStatus: "Recurring",
+                    interval: 2,
+                    recurringType: "Weeks",
+                    weekdays: "",
+                    recurrenceEndDate: "2025-06-10T11:00:00"
+                },
+                {
+                    startDate: "2025-04-10T10:00:00",
+                    endDate: "2025-04-10T11:00:00",
+                    recurringStatus: "Recurring",
+                    interval: 1,
+                    recurringType: "Months",
+                    weekdays: "",
+                    recurrenceEndDate: "2025-12-10T11:00:00"
+                },
+                {
+                    startDate: "2025-04-10T10:00:00",
+                    endDate: "2025-04-10T11:00:00",
+                    recurringStatus: "Recurring",
+                    interval: 1,
+                    recurringType: "Years",
+                    weekdays: "",
+                    recurrenceEndDate: "2027-04-10T11:00:00"
+                }
+            ];
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            testCases.forEach((testCase, index) => {
+                const result = calculateNextAppointment(
+                    testCase.startDate,
+                    testCase.endDate,
+                    testCase.recurringStatus,
+                    testCase.interval,
+                    testCase.recurringType,
+                    testCase.weekdays,
+                    testCase.recurrenceEndDate
+                );
+
+                const resultText = result ? 
+                    `Test Case ${index + 1}: Next Start - ${result.nextStart}, Next End - ${result.nextEnd}` :
+                    `Test Case ${index + 1}: No more appointments within the recurrence end date`;
+
+                const resultElement = document.createElement('p');
+                resultElement.textContent = resultText;
+                resultsDiv.appendChild(resultElement);
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>Appointment Test Cases</h1>
+    <button onclick="runTestCases()">Run Test Cases</button>
+    <div id="results"></div>
+</body>
+</html>
